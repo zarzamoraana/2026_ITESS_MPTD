@@ -1,6 +1,3 @@
-
-//  javac DiagramaPert.java
-//  java DiagramaPert.java
 import java.util.Scanner;
 
 public class DiagramaPert {
@@ -253,7 +250,7 @@ public class DiagramaPert {
         double desviacionEstandarProyecto = Math.sqrt(varianzaRutaCritica);
         System.out.printf("Desviación estándar del proyecto (σ): %.4f\n", desviacionEstandarProyecto);
 
-        // CÁLCULO DE PROBABILIDAD (Z)
+        // CÁLCULO DE PROBABILIDAD (Z) Y PORCENTAJE AUTOMÁTICO
         System.out.println("\n--- CÁLCULO DE PROBABILIDAD DE PLAZO (Z) ---");
         System.out.print("¿Deseas calcular la probabilidad para un tiempo de entrega específico? (s/n): ");
         char respuesta = scanner.next().charAt(0);
@@ -262,9 +259,25 @@ public class DiagramaPert {
             System.out.print("Ingresa el tiempo objetivo (plazo límite deseado): ");
             double tiempoObjetivo = scanner.nextDouble();
 
+            // 1. Cálculo del valor Z estándar: (Tiempo Objetivo - Duración Esperada) / Desviación Estándar del Proyecto
             double z = (tiempoObjetivo - duracionProyecto) / desviacionEstandarProyecto;
+            
+            // 2. Cálculo de la función de error (erf) compatible con Java 8 o superior
+            double x = z / Math.sqrt(2.0);
+            double t = 1.0 / (1.0 + 0.3275911 * Math.abs(x));
+            double polynomial = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+            double erf = 1.0 - polynomial * Math.exp(-x * x);
+            if (x < 0) {
+                erf = -erf;
+            }
+
+            // 3. Cálculo de la probabilidad acumulada final
+            double probabilidad = 0.5 * (1.0 + erf);
+
+            // 4. Impresión de resultados con formato de valor Z y porcentaje exacto
             System.out.printf("Valor Z calculado: %.4f\n", z);
-            System.out.println("Nota: Busca este valor Z en tu tabla de distribución normal estándar (tabla Z) para obtener el porcentaje.");
+            System.out.printf("Probabilidad de terminar el proyecto en %.2f %s o menos: %.2f%% (%.4f)\n", 
+                    tiempoObjetivo, unidadTiempo, (probabilidad * 100.0), probabilidad);
         }
 
         scanner.close();
